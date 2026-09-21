@@ -15,3 +15,10 @@ The retained session-oriented `ObdManager` includes BLE CCCD subscription comple
 ## Build
 
 GitHub Actions installs Java 17, Android 34 and Gradle 8.9, runs unit tests, then builds `app-debug.apk`.
+
+
+## Windows / GitHub Desktop clean update
+
+Do not rely on copy-with-replacement alone when upgrading an older repository: files removed from this package are not deleted by Windows Explorer. After copying the CONTENTS of this package into the repository root, run `PREPARE_REPO_WINDOWS.cmd`. It removes the known legacy DashboardView/full-screen runtime artwork and verifies that the new native root/screens are present. Then review the deletions/additions in GitHub Desktop before Commit/Push.
+
+The Actions workflow invokes the invariant check through `bash`, so Windows executable-bit loss cannot cause a false `Permission denied` failure.

@@ -37,3 +37,9 @@ Retained OBD core (audited/verified, not rewritten in this package):
 - app/src/main/java/com/civicfa1/dashboard/ObdManager.java
 - app/src/main/java/com/civicfa1/dashboard/ObdProtocol.java
 - app/src/main/java/com/civicfa1/dashboard/SensorFreshness.java
+
+Packaging/deployment hardening:
+- PREPARE_REPO_WINDOWS.cmd
+- tools/clean_legacy_windows.ps1
+- workflow invokes verifier via bash
+- verifier rejects all known old runtime dashboard artwork

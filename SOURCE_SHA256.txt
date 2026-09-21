@@ -1,9 +1,10 @@
-e247af3f8cead02c50d76d0f3200b09bb606f6faa5d7b39b5bd8731d92e0b505  ./.github/workflows/build-apk.yml
+a8a78f0c31373fcf36b567d2353b491c21418bed571f56ccec9899007c1df882  ./.github/workflows/build-apk.yml
 9d0c62b809cf774b889dd315c3197a82950013bf105360f012746240149e4f89  ./.gitignore
-ec8e24e944cf2d72fcfb9fb1c2ab86581bb2fa6f3d0942dbf2fbaf78d37b9a30  ./CHANGED_FILES.txt
-f66c3212ed50d214091b20acdf17526065d35d2aaaac11410f1f4ab8cade83ae  ./FILE_LIST.txt
-30c3dcf0922e7cd2780a80fbd4f24b11f133f3c8b19eae6ea26dcda55e958ced  ./README.md
-15407c33aa76f247a48a128fd772381b1b139fa16d8a23c09cbf325d8765d2fe  ./V1.1.0_BUILD_STATUS.md
+949952bf94f1320791bd4df9562c43d5c397b6b289a2cd397ce8a0ee95eaae7b  ./CHANGED_FILES.txt
+431f2be94bd378d7bf07f32e50b7cd406e032ca62bb275725d9dea0942a39c7d  ./FILE_LIST.txt
+7977e4d3d78e73cb1ed405a0a4a2284186db95d5657277cb25a5cc2c806013d5  ./PREPARE_REPO_WINDOWS.cmd
+db863e2a2302fd25eeebacb2b9fb69f70241b8c6952ccd758e9ca715b8becb22  ./README.md
+23024eea81911a57cc230990eee33a53387e1909598b635afa2bd384763b8aa2  ./V1.1.0_BUILD_STATUS.md
 db1aeead08cd8d51a7d5da35edcd59ec8fa45b8e61acdbc62f85115dc1f0be21  ./app/build.gradle
 ca656ff8bf5cead5b3f8ec427d05265416b74df4c8dd0d6bb5261c60f8eec569  ./app/src/main/AndroidManifest.xml
 75c2efc025b5f04825f413d885401ed7457b34672fefd59fa117dea8bb489c2b  ./app/src/main/java/com/civicfa1/dashboard/ActionButtonView.java
@@ -35,4 +36,5 @@ cc05efbb9733b6a412747f2250f66aec3bd8b44a1b5cfc56cc635dadf0314a34  ./app/src/test
 c3c0cf04da0fc239f391c774554d97d890018ab6e37e87cc62f6070d0c8c9909  ./build.gradle
 cc38bc495ca4e4d7fa2fe7c9c1112f36af7a63fbf4fc3e7a088e215942403385  ./gradle.properties
 5ee819d9e23ba399b0e27e37922765aedd28070130437e460d62a279e193a8e3  ./settings.gradle
-051f8174fd76dfdf18f0c5a77ab0bccadfbf140826a5935e4bedadd2eb1fdf7e  ./tools/verify_native_ui.sh
+7ff47c9d6eac20d02e1b92aa5ebd6c12379bf4264378c48903e6f0a4871cf433  ./tools/clean_legacy_windows.ps1
+e630b013d42cc70e0c4c9070452b9d716965263168384c57c4191acfe3069849  ./tools/verify_native_ui.sh
