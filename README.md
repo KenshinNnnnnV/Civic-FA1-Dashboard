@@ -1,6 +1,12 @@
-# Civic FA1 Dashboard v0.9.5 CLEAN
+> Current package: **v1.1.1 — unified clean-shell renderer on the full v0.9.5 functional base.**
 
-Clean Android project for Honda Civic FA1 dashboard.
+# Civic FA1 Dashboard v1.1.1 — Dashboard-1 production fix
+
+Production Android project for Honda Civic FA1 dashboard.
+
+**Canonical repository:** `KenshinNnnnnV/Civic-FA1-Dashboard` (Dashboard-1).
+
+**Do not upload this package to `Civic-FA1-Dashboard-2`.**
 
 Target device:
 - Android head unit, 1280x720 landscape
