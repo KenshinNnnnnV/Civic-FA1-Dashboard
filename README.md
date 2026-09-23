@@ -1,6 +1,6 @@
-> Current package: **v1.1.1 — unified clean-shell renderer on the full v0.9.5 functional base.**
+> Current package: **v1.1.2 — unified clean-shell renderer on the full v0.9.5 functional base.**
 
-# Civic FA1 Dashboard v1.1.1 — Dashboard-1 production fix
+# Civic FA1 Dashboard v1.1.2 — Dashboard-1 production fix
 
 Production Android project for Honda Civic FA1 dashboard.
 
@@ -23,3 +23,7 @@ Runtime artwork used by the APK is only:
 - `app/src/main/res/drawable-nodpi/splash_bg.jpg`
 
 Build through GitHub Actions or with an Android/Gradle environment compatible with compileSdk 34 and Java 17.
+
+
+## v1.1.2 Master Shell
+Static header/navbar geometry lives in the runtime PNG shells. DashboardView draws only dynamic vehicle/OBD data and interaction state.

@@ -24,12 +24,10 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Civic FA1 Dashboard v1.1.1 unified clean-shell runtime.
+ * Civic FA1 Dashboard v1.1.2 master-shell runtime.
  *
  * Three fixed 1280x720 modes: CONNECT / SPORT / DIAGNOSTICS.
- * The three approved 1280x720 disconnected-state references are the locked visual shell. Runtime code replaces
- * only changing values/statuses with native overlays while preserving the approved geometry, atmosphere,
- * navigation, typography hierarchy and disconnected appearance 1:1. There is no generated/demo telemetry in normal mode.
+ * The three normalized 1280x720 production shells own all static design, including identical header/navbar geometry. Runtime code draws only changing values, progress, RPM arc, OBD state and interaction markers; it never paints gray replacement panels. There is no generated/demo telemetry in normal mode.
  */
 public final class DashboardView extends View implements ObdManager.Listener {
 
@@ -80,9 +78,12 @@ public final class DashboardView extends View implements ObdManager.Listener {
 
     private static final float DW = 1280f;
     private static final float DH = 720f;
-    private static final float HEADER_H = 90f;
-    private static final float NAV_TOP = 632f;
-    private static final float NAV_BOTTOM = 710f;
+    private static final float BODY_TOP = 90f;
+    private static final float NAV_TOP = 625f;
+    private static final float NAV_BOTTOM = 705f;
+    private static final float CONNECT_BODY_SOURCE_BOTTOM = 640f;
+    private static final float SPORT_BODY_SOURCE_BOTTOM = 590f;
+    private static final float DIAGNOSTICS_BODY_SOURCE_BOTTOM = 620f;
 
     private static final int BG = Color.rgb(2, 9, 14);
     private static final int PANEL = Color.rgb(3, 16, 20);
@@ -370,17 +371,25 @@ public final class DashboardView extends View implements ObdManager.Listener {
         canvas.translate(viewOffsetX, viewOffsetY);
         canvas.scale(s, s);
 
-        // Static art supplies the mode-specific dashboard body. Header and bottom navigation are
-        // rendered from one shared 1280x720 geometry so switching modes never changes their size,
-        // angle or position. Runtime paints only live values/states inside clean shell zones.
+        // v1.1.2: the approved artwork now owns the complete static chrome (header + navbar).
+        // Runtime never paints replacement panels over it; it draws only dynamic state/data.
         drawBackground(canvas);
-        drawUnifiedHeader(canvas);
+        drawHeaderStateOverlay(canvas);
+
+        // Each source shell originally used a slightly different body height. The PNGs are normalized
+        // to BODY_TOP..NAV_TOP; apply the exact same vertical transform to runtime overlays so values,
+        // hit targets and progress fills stay locked to their cards without mode-to-mode jumping.
+        canvas.save();
+        float bodyScale = modeBodyScale();
+        canvas.translate(0f, BODY_TOP);
+        canvas.scale(1f, bodyScale);
+        canvas.translate(0f, -BODY_TOP);
         switch (mode) {
             case CONNECT: drawReferenceConnectOverlay(canvas); break;
             case SPORT: drawReferenceSportOverlay(canvas); break;
             case DIAGNOSTICS: drawReferenceDiagnosticsOverlay(canvas); break;
         }
-        drawBottomNavigation(canvas);
+        canvas.restore();
 
         if (sensorPickerSlot >= 0) drawSensorPicker(canvas);
         canvas.restore();
@@ -394,68 +403,29 @@ public final class DashboardView extends View implements ObdManager.Listener {
             fill.setAlpha(255);
             c.drawBitmap(b, null, canvasBounds, fill);
         }
-
-        // Hide the three different baked headers/nav bars. The shared runtime chrome below is the
-        // only header/navigation layer, preventing the visible jump seen in the real-head-unit video.
-        fill.setStyle(Paint.Style.FILL);
-        fill.setColor(Color.rgb(1, 7, 10));
-        c.drawRect(0, 0, DW, HEADER_H, fill);
-        if (mode == Mode.SPORT) c.drawRect(0, 590, DW, NAV_TOP, fill);
-        else if (mode == Mode.DIAGNOSTICS) c.drawRect(0, 620, DW, NAV_TOP, fill);
-        c.drawRect(0, NAV_TOP, DW, DH, fill);
     }
 
-    private int modeAccent() {
-        return mode == Mode.SPORT ? RED : mode == Mode.DIAGNOSTICS ? GREEN : CYAN;
-    }
-
-    private void drawUnifiedHeader(Canvas c) {
-        final int accent = modeAccent();
-        final float top = 7f, bottom = 82f, slant = 26f;
-        final float[] lefts = {8f, 399f, 890f};
-        final float[] rights = {390f, 881f, 1272f};
-
-        for (int i = 0; i < 3; i++) {
-            float l = lefts[i], r = rights[i];
-            path.reset();
-            if (i == 0) {
-                path.moveTo(l + 8, top); path.lineTo(r - slant, top);
-                path.lineTo(r, bottom); path.lineTo(l + 8, bottom);
-            } else if (i == 1) {
-                path.moveTo(l + slant, top); path.lineTo(r - slant, top);
-                path.lineTo(r, bottom); path.lineTo(l, bottom);
-            } else {
-                path.moveTo(l + slant, top); path.lineTo(r - 8, top);
-                path.lineTo(r - 8, bottom); path.lineTo(l, bottom);
-            }
-            path.close();
-            fill.setColor(Color.argb(248, 2, 11, 15));
-            c.drawPath(path, fill);
-            stroke.setColor(accent); stroke.setStrokeWidth(1.6f);
-            c.drawPath(path, stroke);
+    private float modeBodyScale() {
+        final float target = NAV_TOP - BODY_TOP;
+        switch (mode) {
+            case CONNECT: return target / (CONNECT_BODY_SOURCE_BOTTOM - BODY_TOP);
+            case SPORT: return target / (SPORT_BODY_SOURCE_BOTTOM - BODY_TOP);
+            case DIAGNOSTICS: default: return target / (DIAGNOSTICS_BODY_SOURCE_BOTTOM - BODY_TOP);
         }
+    }
 
-        // Left tile: vehicle identity.
-        drawHondaMark(c, 30, 22);
-        label(c, "CIVIC FA1", 94, 47, 23, WHITE, Paint.Align.LEFT, true, true);
-        label(c, "i-VTEC · 1.8L R18A", 95, 68, 11, MUTED, Paint.Align.LEFT, false, true);
+    private float toModeSourceY(float screenY) {
+        if (screenY <= BODY_TOP || screenY >= NAV_TOP) return screenY;
+        return BODY_TOP + (screenY - BODY_TOP) / modeBodyScale();
+    }
 
-        // Center tile: mode. Same geometry for CONNECT / SPORT / DIAGNOSTICS.
-        Icon modeIcon = mode == Mode.CONNECT ? Icon.LINK : mode == Mode.SPORT ? Icon.FLAG : Icon.GEAR;
-        String title = mode == Mode.CONNECT ? "CONNECT MODE" : mode == Mode.SPORT ? "SPORT MODE" : "DIAGNOSTICS MODE";
-        String sub = mode == Mode.CONNECT ? "OBD SETUP & LINK" : mode == Mode.SPORT ? "HIGHER STANDARDS" : "KNOW YOUR CAR";
-        drawIcon(c, modeIcon, 492, 45, accent, .66f);
-        glowLabel(c, title, 640, 46, 27, accent, Paint.Align.CENTER, true, 2.0f);
-        label(c, sub, 640, 69, 11, MUTED, Paint.Align.CENTER, false, true);
-
-        // Right tile: live OBD state only. Clock/Wi-Fi are deliberately absent.
+    /** Dynamic content for the clean right-hand header tile only. */
+    private void drawHeaderStateOverlay(Canvas c) {
         int sc = stateColor();
-        drawIcon(c, Icon.OBD, 931, 44, sc, .58f);
-        label(c, "OBD:", 970, 40, 13, WHITE, Paint.Align.LEFT, true, false);
-        label(c, stateTitle(), 1012, 40, 13, sc, Paint.Align.LEFT, true, false);
-        label(c, truncate(stateSubtitle(), 34), 970, 62, 10, MUTED, Paint.Align.LEFT, false, false);
-
-        line(c, 10, 88, 1270, 88, Color.argb(205, Color.red(accent), Color.green(accent), Color.blue(accent)), 1.5f);
+        drawIcon(c, Icon.OBD, 920, 43, sc, .55f);
+        label(c, "OBD:", 953, 39, 13, WHITE, Paint.Align.LEFT, true, false);
+        label(c, stateTitle(), 995, 39, 13, sc, Paint.Align.LEFT, true, false);
+        label(c, truncate(stateSubtitle(), 34), 953, 61, 10, MUTED, Paint.Align.LEFT, false, false);
     }
 
     private int stateColor() {
@@ -1418,49 +1388,6 @@ public final class DashboardView extends View implements ObdManager.Listener {
     // BOTTOM NAVIGATION
     // -----------------------------------------------------------------------------------------
 
-    private void drawBottomNavigation(Canvas c) {
-        final float top = NAV_TOP + 4f, bottom = NAV_BOTTOM - 4f;
-        final float margin = 10f, gap = 8f;
-        final float usable = DW - margin * 2f - gap * 2f;
-        final float w = usable / 3f;
-        final float slant = 24f;
-        Mode[] modes = {Mode.CONNECT, Mode.SPORT, Mode.DIAGNOSTICS};
-        String[] names = {"CONNECT", "SPORT", "DIAGNOSTICS"};
-        String[] subs = {"OBD SETUP & LINK", "HIGHER STANDARDS", "KNOW YOUR CAR"};
-        Icon[] icons = {Icon.LINK, Icon.FLAG, Icon.GEAR};
-        int[] accents = {CYAN, RED, GREEN};
-
-        for (int i = 0; i < 3; i++) {
-            float l = margin + i * (w + gap);
-            float r = l + w;
-            boolean active = mode == modes[i];
-            int accent = accents[i];
-            path.reset();
-            if (i == 0) {
-                path.moveTo(l + 3, top); path.lineTo(r - slant, top);
-                path.lineTo(r - 3, bottom); path.lineTo(l + slant, bottom);
-            } else if (i == 1) {
-                path.moveTo(l + slant, top); path.lineTo(r - slant, top);
-                path.lineTo(r - 3, bottom); path.lineTo(l + 3, bottom);
-            } else {
-                path.moveTo(l + slant, top); path.lineTo(r - 3, top);
-                path.lineTo(r - slant, bottom); path.lineTo(l + 3, bottom);
-            }
-            path.close();
-            fill.setColor(active ? Color.argb(72, Color.red(accent), Color.green(accent), Color.blue(accent))
-                    : Color.rgb(3, 13, 17));
-            c.drawPath(path, fill);
-            stroke.setColor(active ? accent : Color.rgb(176, 201, 214));
-            stroke.setStrokeWidth(active ? 2.0f : 1.1f);
-            c.drawPath(path, stroke);
-
-            float iconX = l + 105f;
-            drawIcon(c, icons[i], iconX, 670f, active ? accent : Color.rgb(220, 232, 239), .74f);
-            label(c, names[i], l + 150f, 666f, 18f, WHITE, Paint.Align.LEFT, true, false);
-            label(c, subs[i], l + 150f, 689f, 10.2f, active ? accent : MUTED, Paint.Align.LEFT, false, true);
-        }
-    }
-
     // -----------------------------------------------------------------------------------------
     // SENSOR MODEL HELPERS
     // -----------------------------------------------------------------------------------------
@@ -1554,17 +1481,18 @@ public final class DashboardView extends View implements ObdManager.Listener {
     @Override public boolean onTouchEvent(MotionEvent e) {
         float x = (e.getX() - viewOffsetX) / viewScale;
         float y = (e.getY() - viewOffsetY) / viewScale;
+        float modeY = toModeSourceY(y);
         if (e.getAction() == MotionEvent.ACTION_DOWN) {
-            touchDownY = lastTouchY = y;
+            touchDownY = lastTouchY = modeY;
             diagDragging = false;
             return true;
         }
         if (e.getAction() == MotionEvent.ACTION_MOVE) {
-            if (mode == Mode.DIAGNOSTICS && x >= 860 && x <= 1254 && y >= 330 && y <= 520) {
-                float dy = y - lastTouchY;
-                if (Math.abs(y - touchDownY) > 4) diagDragging = true;
+            if (mode == Mode.DIAGNOSTICS && x >= 860 && x <= 1254 && modeY >= 330 && modeY <= 520) {
+                float dy = modeY - lastTouchY;
+                if (Math.abs(modeY - touchDownY) > 4) diagDragging = true;
                 diagLiveScroll = clamp(diagLiveScroll - dy, 0, Math.max(0, liveSensorKeys().size() * 20f - 130f));
-                lastTouchY = y;
+                lastTouchY = modeY;
                 invalidate();
             }
             return true;
@@ -1585,8 +1513,8 @@ public final class DashboardView extends View implements ObdManager.Listener {
             postInvalidateOnAnimation(); return true;
         }
 
-        if (mode == Mode.CONNECT) handleConnectTouch(x, y);
-        else if (mode == Mode.SPORT) handleSportTouch(x, y);
+        if (mode == Mode.CONNECT) handleConnectTouch(x, modeY);
+        else if (mode == Mode.SPORT) handleSportTouch(x, modeY);
         return true;
     }
 
